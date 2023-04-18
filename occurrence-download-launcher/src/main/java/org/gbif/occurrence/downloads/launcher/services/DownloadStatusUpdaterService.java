@@ -52,7 +52,7 @@ public class DownloadStatusUpdaterService {
         download.setStatus(status);
         updateDownload(download);
       } else {
-        log.info("Skiping downloads status updating for download {}, status is already {}", downloadKey, status);
+        log.debug("Skiping downloads status updating for download {}, status is already {}", downloadKey, status);
       }
     } else {
       log.error("Can't update status for download {} to {}", downloadKey, status);

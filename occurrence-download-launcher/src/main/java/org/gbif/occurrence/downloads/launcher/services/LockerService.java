@@ -28,18 +28,18 @@ public class LockerService {
   private final Map<String, Thread> lockMap = new ConcurrentHashMap<>();
 
   public void lock(String id, Thread thread) {
-    log.info("Lock the thread for {}", id);
+    log.info("Lock the thread for id {}", id);
     lockMap.put(id, thread);
     LockSupport.park(thread);
   }
 
   public void unlock(String id) {
-    log.info("Unlock the thread for {}", id);
+    log.info("Unlock the thread for id {}", id);
     Thread thread = lockMap.get(id);
     if (thread != null) {
       LockSupport.unpark(thread);
       lockMap.remove(id);
-      log.info("The thread for {} is unlocked", id);
+      log.info("The thread for id {} is unlocked", id);
     }
   }
 

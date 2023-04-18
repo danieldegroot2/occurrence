@@ -13,6 +13,7 @@
  */
 package org.gbif.occurrence.downloads.launcher.listeners;
 
+import org.gbif.api.model.occurrence.Download.Status;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.occurrence.downloads.launcher.DownloadsMessage;
 import org.gbif.occurrence.downloads.launcher.services.DownloadStatusUpdaterService;
@@ -54,6 +55,9 @@ public class DownloadServiceListener extends AbstractMessageCallback<DownloadsMe
     if (jobStatus == JobStatus.RUNNING) {
       String jobId = downloadsMessage.getJobId();
 
+      // Mark downloads as RUNNING
+      downloadStatusUpdaterService.updateStatus(jobId, Status.RUNNING);
+
       log.info("Locking the thread until downloads job is finished");
       lockerService.lock(jobId, Thread.currentThread());
 
@@ -63,6 +67,7 @@ public class DownloadServiceListener extends AbstractMessageCallback<DownloadsMe
     }
 
     if (jobStatus == JobStatus.FAILED) {
+      downloadStatusUpdaterService.updateStatus(downloadsMessage.getJobId(), Status.FAILED);
       log.error("Failed to process message: {}", downloadsMessage.toString());
       throw new AmqpRejectAndDontRequeueException("Failed to process message");
     }

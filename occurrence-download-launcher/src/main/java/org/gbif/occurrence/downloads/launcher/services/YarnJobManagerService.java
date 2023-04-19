@@ -20,22 +20,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.Download.Status;
-import org.gbif.occurrence.downloads.launcher.DownloadsMessage;
-import org.gbif.occurrence.downloads.launcher.config.SparkConfiguration;
-import org.gbif.occurrence.downloads.launcher.services.YarnClientService.Application;
-
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.spark.launcher.Spark2Launcher;
 import org.apache.spark.launcher.SparkLauncher;
+import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.Download.Status;
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
+import org.gbif.occurrence.downloads.launcher.config.SparkConfiguration;
+import org.gbif.occurrence.downloads.launcher.services.YarnClientService.Application;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
-import javax.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service("yarn")
@@ -47,28 +44,29 @@ public class YarnJobManagerService implements JobManager {
   private final SparkOutputListener outputListener;
 
   public YarnJobManagerService(
-    YarnClientService yarnClientService,
-    SparkConfiguration sparkConfiguration,
-    SparkOutputListener outputListener) {
+      YarnClientService yarnClientService,
+      SparkConfiguration sparkConfiguration,
+      SparkOutputListener outputListener) {
     this.yarnClientService = yarnClientService;
     this.sparkConfiguration = sparkConfiguration;
     this.outputListener = outputListener;
   }
 
   @Override
-  public JobStatus createJob(@NotNull DownloadsMessage message) {
+  public JobStatus createJob(@NotNull DownloadLauncherMessage message) {
     try {
       String jobId = message.getJobId();
 
-      SparkLauncher launcher = new Spark2Launcher()
-        // Spark settings
-        .setAppName(jobId)
-        .setSparkHome("empty") // Workaround for Spark2Launcher
-        .setDeployMode(sparkConfiguration.getDeployMode())
-        .setMaster(sparkConfiguration.getMaster())
-        .setAppResource(sparkConfiguration.getAppResource())
-        .setMainClass(sparkConfiguration.getMainClass())
-        .setVerbose(sparkConfiguration.isVerbose());
+      SparkLauncher launcher =
+          new Spark2Launcher()
+              // Spark settings
+              .setAppName(jobId)
+              .setSparkHome("empty") // Workaround for Spark2Launcher
+              .setDeployMode(sparkConfiguration.getDeployMode())
+              .setMaster(sparkConfiguration.getMaster())
+              .setAppResource(sparkConfiguration.getAppResource())
+              .setMainClass(sparkConfiguration.getMainClass())
+              .setVerbose(sparkConfiguration.isVerbose());
 
       sparkConfiguration.getFiles().forEach(launcher::addFile);
       // App settings
@@ -95,7 +93,7 @@ public class YarnJobManagerService implements JobManager {
   @Override
   public Optional<Status> getStatusByName(String name) {
     Map<String, Application> map =
-      yarnClientService.getAllApplicationByNames(Collections.singleton(name));
+        yarnClientService.getAllApplicationByNames(Collections.singleton(name));
     return getStatus(map.get(name));
   }
 
@@ -110,11 +108,11 @@ public class YarnJobManagerService implements JobManager {
       String downloadKey = download.getKey();
       Application application = applications.get(downloadKey);
       getStatus(application)
-        .ifPresent(
-          status -> {
-            download.setStatus(status);
-            result.add(download);
-          });
+          .ifPresent(
+              status -> {
+                download.setStatus(status);
+                result.add(download);
+              });
     }
     return result;
   }
@@ -134,9 +132,9 @@ public class YarnJobManagerService implements JobManager {
       }
     } else {
       log.info(
-        "Downloads with applicationId {} and status {}",
-        application.getApplicationId(),
-        application.getState().toString());
+          "Downloads with applicationId {} and status {}",
+          application.getApplicationId(),
+          application.getState().toString());
     }
     return Optional.ofNullable(status);
   }

@@ -16,10 +16,8 @@ package org.gbif.occurrence.downloads.launcher.services;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.LockSupport;
-
-import org.springframework.stereotype.Component;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -48,10 +46,10 @@ public class LockerService {
     if (!lockMap.isEmpty()) {
 
       lockMap.forEach(
-        (id, thread) -> {
-          log.info("Unpark thread for id {}", id);
-          LockSupport.unpark(thread);
-        });
+          (id, thread) -> {
+            log.info("Unpark thread for id {}", id);
+            LockSupport.unpark(thread);
+          });
 
       lockMap.clear();
     }

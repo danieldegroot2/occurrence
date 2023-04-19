@@ -13,13 +13,11 @@
  */
 package org.gbif.occurrence.downloads.launcher.services;
 
-import org.gbif.api.model.occurrence.Download;
-import org.gbif.api.model.occurrence.Download.Status;
-import org.gbif.occurrence.downloads.launcher.DownloadsMessage;
-
 import java.util.List;
 import java.util.Optional;
-
+import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.Download.Status;
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -29,7 +27,7 @@ import org.springframework.stereotype.Service;
 public class KubernetesJobManagerService implements JobManager {
 
   @Override
-  public JobStatus createJob(DownloadsMessage message) {
+  public JobStatus createJob(DownloadLauncherMessage message) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 

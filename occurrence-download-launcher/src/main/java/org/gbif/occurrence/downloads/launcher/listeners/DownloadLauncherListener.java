@@ -13,30 +13,28 @@
  */
 package org.gbif.occurrence.downloads.launcher.listeners;
 
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.occurrence.Download.Status;
 import org.gbif.common.messaging.AbstractMessageCallback;
-import org.gbif.occurrence.downloads.launcher.DownloadsMessage;
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
 import org.gbif.occurrence.downloads.launcher.services.DownloadStatusUpdaterService;
 import org.gbif.occurrence.downloads.launcher.services.JobManager;
 import org.gbif.occurrence.downloads.launcher.services.JobManager.JobStatus;
 import org.gbif.occurrence.downloads.launcher.services.LockerService;
-
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
-
 /** Listen MQ to receive and run a download */
 @Slf4j
 @Component
-public class DownloadServiceListener extends AbstractMessageCallback<DownloadsMessage> {
+public class DownloadLauncherListener extends AbstractMessageCallback<DownloadLauncherMessage> {
 
   private final JobManager jobManager;
   private final DownloadStatusUpdaterService downloadStatusUpdaterService;
   private final LockerService lockerService;
 
-  public DownloadServiceListener(
+  public DownloadLauncherListener(
     JobManager jobManager,
     DownloadStatusUpdaterService downloadStatusUpdaterService,
     LockerService lockerService) {
@@ -47,7 +45,7 @@ public class DownloadServiceListener extends AbstractMessageCallback<DownloadsMe
 
   @Override
   @RabbitListener(queues = "${downloads.queueName}")
-  public void handleMessage(DownloadsMessage downloadsMessage) {
+  public void handleMessage(DownloadLauncherMessage downloadsMessage) {
     log.info("Received message {}", downloadsMessage);
 
     JobStatus jobStatus = jobManager.createJob(downloadsMessage);
@@ -68,7 +66,7 @@ public class DownloadServiceListener extends AbstractMessageCallback<DownloadsMe
 
     if (jobStatus == JobStatus.FAILED) {
       downloadStatusUpdaterService.updateStatus(downloadsMessage.getJobId(), Status.FAILED);
-      log.error("Failed to process message: {}", downloadsMessage.toString());
+      log.error("Failed to process message: {}", downloadsMessage);
       throw new AmqpRejectAndDontRequeueException("Failed to process message");
     }
   }

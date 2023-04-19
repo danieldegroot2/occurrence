@@ -17,10 +17,12 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.occurrence.DownloadRequestService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
 import org.gbif.occurrence.common.download.DownloadUtils;
-import org.gbif.occurrence.download.service.workflow.DownloadWorkflowParametersBuilder;
 import org.gbif.occurrence.mail.BaseEmailModel;
 import org.gbif.occurrence.mail.EmailSender;
 import org.gbif.occurrence.mail.OccurrenceEmailManager;
@@ -33,13 +35,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -102,31 +102,33 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
   private final String wsUrl;
   private final File downloadMount;
   private final OccurrenceDownloadService occurrenceDownloadService;
-  private final DownloadWorkflowParametersBuilder parametersBuilder;
   private final OccurrenceEmailManager emailManager;
   private final EmailSender emailSender;
-
   private final DownloadLimitsService downloadLimitsService;
+  private final DownloadLauncherService downloadService;
+  private final MessagePublisher messagePublisher;
 
   @Autowired
   public DownloadRequestServiceImpl(
-      @Qualifier("oozie.default_properties") Map<String, String> defaultProperties,
       @Value("${occurrence.download.portal.url}") String portalUrl,
       @Value("${occurrence.download.ws.url}") String wsUrl,
       @Value("${occurrence.download.ws.mount}") String wsMountDir,
       OccurrenceDownloadService occurrenceDownloadService,
       DownloadLimitsService downloadLimitsService,
       OccurrenceEmailManager emailManager,
-      EmailSender emailSender) {
+      EmailSender emailSender,
+      DownloadLauncherService downloadService,
+      MessagePublisher messagePublisher) {
     this.downloadIdService = new DownloadIdService();
     this.portalUrl = portalUrl;
     this.wsUrl = wsUrl;
     this.downloadMount = new File(wsMountDir);
     this.occurrenceDownloadService = occurrenceDownloadService;
-    this.parametersBuilder = new DownloadWorkflowParametersBuilder(defaultProperties);
     this.downloadLimitsService = downloadLimitsService;
     this.emailManager = emailManager;
     this.emailSender = emailSender;
+    this.downloadService = downloadService;
+    this.messagePublisher = messagePublisher;
   }
 
   @Override
@@ -136,7 +138,9 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
       if (download != null) {
         if (RUNNING_STATUSES.contains(download.getStatus())) {
           updateDownloadStatus(download, Download.Status.CANCELLED);
-          //client.kill(DownloadUtils.downloadToWorkflowId(downloadKey));
+
+          downloadService.cancelJob(downloadKey);
+
           log.info("Download {} cancelled", downloadKey);
         }
       } else {
@@ -178,6 +182,9 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
       log.debug("Download job id is: [{}]", jobId);
       String downloadId = DownloadUtils.workflowToDownloadId(jobId);
       persistDownload(request, downloadId, source);
+
+      messagePublisher.send(new DownloadLauncherMessage(jobId));
+
       return downloadId;
     } catch (Exception e) {
       log.error("Failed to create download job", e);

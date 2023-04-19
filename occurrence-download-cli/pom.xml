@@ -123,6 +123,16 @@
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-spark-udf</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.common</groupId>
+      <artifactId>gbif-postal-service</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>jackson-datatype-guava</artifactId>
+          <groupId>com.fasterxml.jackson</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <!-- Spark -->
     <dependency>

@@ -36,9 +36,25 @@ public class DownloadListenerConfiguration {
   @NotNull
   public int threadListeners = 1;
 
-
   @Parameter(names = "--hive-warehouse-dir")
   @NotNull
   public String hiveWarehouseDir;
+
+  @Parameter(names = "--database")
+  @NotNull
+  public String database;
+
+  @Parameter(names = "--source-table")
+  @NotNull
+  public String sourceTable;
+
+
+  @Parameter(names = "--exchange")
+  @NotNull
+  public String exchange;
+
+  @Parameter(names = "--routing-key")
+  @NotNull
+  public String routingKey;
 
 }

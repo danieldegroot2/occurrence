@@ -43,7 +43,7 @@ public class DownloadLauncherServiceResource implements DownloadLauncherService 
   // TODO: ADD SECURITY: ADMIN ONLY
   @Override
   @Hidden
-  @DeleteMapping("{jobId}")
+  @DeleteMapping("/{jobId}")
   public void cancelJob(@PathVariable String jobId) {
     JobStatus jobStatus = jobManager.cancelJob(jobId);
     if (jobStatus == JobStatus.CANCELLED) {

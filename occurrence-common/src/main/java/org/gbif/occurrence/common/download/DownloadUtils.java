@@ -67,17 +67,6 @@ public class DownloadUtils {
     return concatUrlPaths(baseUrl, String.format(DOWNLOAD_LINK_FMT, downloadType.name().toLowerCase(), downloadId, extension));
   }
 
-  public static String downloadToWorkflowId(String downloadId) {
-    return downloadId + OOZIE_SUFFIX;
-  }
-
-  public static String workflowToDownloadId(String workflowId) {
-    if (workflowId.contains(OOZIE_SUFFIX)) {
-      return workflowId.replace(OOZIE_SUFFIX, "");
-    }
-    throw new IllegalArgumentException("WorkflowId given in unknown format: " + workflowId);
-  }
-
   public static String downloadTableName(String downloadKey) {
     return downloadKey.replaceAll("-", "_");
   }

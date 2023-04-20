@@ -174,9 +174,8 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
             "A download limitation is exceeded:\n" + exceedSimultaneousLimit + "\n");
       }
 
-      String jobId = downloadIdService.generateId();
-      log.debug("Download job id is: [{}]", jobId);
-      String downloadId = DownloadUtils.workflowToDownloadId(jobId);
+      String downloadId = downloadIdService.generateId();
+      log.debug("Download job id is: [{}]", downloadId);
       persistDownload(request, downloadId, source);
       return downloadId;
     } catch (Exception e) {
@@ -238,15 +237,14 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
 
   /** Processes a callback from Oozie which update the download status. */
   @Override
-  public void processCallback(String jobId, String status) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(jobId), "<jobId> may not be null or empty");
+  public void processCallback(String downloadId, String status) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadId), "<jobId> may not be null or empty");
     Preconditions.checkArgument(
         !Strings.isNullOrEmpty(status), "<status> may not be null or empty");
     Optional<JobStatus> opStatus = Enums.getIfPresent(JobStatus.class, status.toUpperCase());
     Preconditions.checkArgument(opStatus.isPresent(), "<status> the requested status is not valid");
-    String downloadId = DownloadUtils.workflowToDownloadId(jobId);
 
-    log.debug("Processing callback for jobId [{}] with status [{}]", jobId, status);
+    log.debug("Processing callback for jobId [{}] with status [{}]", downloadId, status);
 
     Download download = occurrenceDownloadService.get(downloadId);
     if (download == null) {
@@ -280,7 +278,7 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
 
       case FAILED:
         log.error(
-            NOTIFY_ADMIN, "Got callback for failed query. JobId [{}], Status [{}]", jobId, status);
+            NOTIFY_ADMIN, "Got callback for failed query. JobId [{}], Status [{}]", downloadId, status);
         updateDownloadStatus(download, newStatus);
         emailModel = emailManager.generateFailedDownloadEmailModel(download, portalUrl);
         emailSender.send(emailModel);

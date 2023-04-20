@@ -14,6 +14,7 @@
 package org.gbif.occurrence.ws.config;
 
 import org.gbif.api.model.occurrence.DownloadType;
+import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.occurrence.common.download.DownloadUtils;
 import org.gbif.occurrence.download.service.workflow.DownloadWorkflowParameters;
@@ -23,6 +24,7 @@ import org.gbif.occurrence.query.TitleLookupServiceFactory;
 import org.gbif.occurrence.search.configuration.OccurrenceSearchConfiguration;
 import org.gbif.occurrence.search.es.OccurrenceBaseEsFieldMapper;
 import org.gbif.occurrence.search.es.OccurrenceEsField;
+import org.gbif.occurrence.ws.client.DownloadLauncherWsClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
@@ -80,6 +82,18 @@ public class OccurrenceWsConfiguration {
         .build(OccurrenceDownloadClient.class);
   }
 
+  @Bean
+  public DownloadLauncherService downloadLauncherService(
+      @Value("${api.url}") String apiUrl,
+      @Value("${occurrence.download.ws.username}") String downloadUsername,
+      @Value("${occurrence.download.ws.password}") String downloadUserPassword) {
+    return new ClientBuilder()
+        .withUrl(apiUrl)
+        .withCredentials(downloadUsername, downloadUserPassword)
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withFormEncoder()
+        .build(DownloadLauncherWsClient.class);
+  }
 
   @Configuration
   public static class OccurrenceSearchConfigurationWs extends OccurrenceSearchConfiguration {

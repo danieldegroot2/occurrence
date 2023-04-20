@@ -20,7 +20,6 @@ import org.gbif.occurrence.downloads.launcher.services.JobManager;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -71,9 +70,9 @@ public class OccurrenceDownloadsLauncherApplication {
   @Bean
   Queue downloadsQueue(DownloadServiceConfiguration configuration) {
     return QueueBuilder.durable(configuration.getQueueName())
-      .withArgument("x-dead-letter-exchange", "")
-      .withArgument("x-dead-letter-routing-key", configuration.getDeadQueueName())
-      .build();
+        .withArgument("x-dead-letter-exchange", "")
+        .withArgument("x-dead-letter-routing-key", configuration.getDeadQueueName())
+        .build();
   }
 
   @Bean
@@ -83,7 +82,7 @@ public class OccurrenceDownloadsLauncherApplication {
 
   @Bean
   public RabbitTemplate rabbitTemplate(
-    ConnectionFactory connectionFactory, Jackson2JsonMessageConverter converter) {
+      ConnectionFactory connectionFactory, Jackson2JsonMessageConverter converter) {
     RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
     rabbitTemplate.setMessageConverter(converter);
     return rabbitTemplate;
@@ -92,16 +91,15 @@ public class OccurrenceDownloadsLauncherApplication {
   @Bean
   public OccurrenceDownloadClient occurrenceDownloadClient(RegistryConfiguration configuration) {
     return new ClientBuilder()
-      .withUrl(configuration.getApiUrl())
-      .withCredentials(configuration.getUserName(), configuration.getPassword())
-      .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
-      .withFormEncoder()
-      .build(OccurrenceDownloadClient.class);
+        .withUrl(configuration.getApiUrl())
+        .withCredentials(configuration.getUserName(), configuration.getPassword())
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withFormEncoder()
+        .build(OccurrenceDownloadClient.class);
   }
 
   @Bean
   JobManager jobManager(ApplicationContext context, DownloadServiceConfiguration configuration) {
     return context.getBean(configuration.getManagerQualifier(), JobManager.class);
   }
-
 }

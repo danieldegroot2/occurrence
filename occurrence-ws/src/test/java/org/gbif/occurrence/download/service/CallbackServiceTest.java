@@ -22,8 +22,10 @@ import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.occurrence.mail.EmailSender;
 import org.gbif.occurrence.mail.OccurrenceEmailManager;
 
@@ -68,10 +70,8 @@ public class CallbackServiceTest {
 
   private OozieClient oozieClient;
   private CallbackService service;
-  private OccurrenceDownloadService occurrenceDownloadService;
   private OccurrenceEmailManager emailManager;
   private EmailSender emailSender;
-  private DownloadLimitsService downloadLimitsService;
 
   /**
    * Creates a mock download object.
@@ -94,16 +94,24 @@ public class CallbackServiceTest {
   public void setup() {
     emailManager = mock(OccurrenceEmailManager.class);
     emailSender = mock(EmailSender.class);
-    occurrenceDownloadService = mock(OccurrenceDownloadService.class);
-    downloadLimitsService= mock(DownloadLimitsService.class);
+    OccurrenceDownloadService occurrenceDownloadService = mock(OccurrenceDownloadService.class);
+    DownloadLimitsService downloadLimitsService = mock(DownloadLimitsService.class);
     when(downloadLimitsService.exceedsSimultaneousDownloadLimit(any(String.class))).thenReturn(null);
     when(downloadLimitsService.exceedsDownloadComplexity(any(DownloadRequest.class))).thenReturn(null);
     when(occurrenceDownloadService.get(anyString())).thenReturn(mockDownload());
     oozieClient = mock(OozieClient.class);
     service =
       new DownloadRequestServiceImpl(
-        Maps.newHashMap(), "http://gbif-dev.org/occurrence", "http://localhost:8080/",
-        "", occurrenceDownloadService, downloadLimitsService, emailManager, emailSender);
+        "http://gbif-dev.org/occurrence",
+        "http://localhost:8080/",
+        "",
+        occurrenceDownloadService,
+        downloadLimitsService,
+        emailManager,
+        emailSender,
+        mock(DownloadLauncherService.class),
+        mock(MessagePublisher.class)
+      );
   }
 
   @Test

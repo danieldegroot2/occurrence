@@ -13,32 +13,6 @@
  */
 package org.gbif.occurrence.downloads.launcher.services;
 
-import org.gbif.occurrence.downloads.launcher.config.DownloadServiceConfiguration;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.validation.constraints.NotNull;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.springframework.stereotype.Service;
-
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
 import static org.apache.hadoop.yarn.api.records.YarnApplicationState.ACCEPTED;
 import static org.apache.hadoop.yarn.api.records.YarnApplicationState.FAILED;
 import static org.apache.hadoop.yarn.api.records.YarnApplicationState.FINISHED;
@@ -48,14 +22,36 @@ import static org.apache.hadoop.yarn.api.records.YarnApplicationState.NEW_SAVING
 import static org.apache.hadoop.yarn.api.records.YarnApplicationState.RUNNING;
 import static org.apache.hadoop.yarn.api.records.YarnApplicationState.SUBMITTED;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.gbif.occurrence.downloads.launcher.config.DownloadServiceConfiguration;
+import org.springframework.stereotype.Service;
+
 @Slf4j
 @Service
 public class YarnClientService implements Closeable {
 
   private static final EnumSet<YarnApplicationState> YARN_RUNNING_APPLICATION_STATES =
-    EnumSet.of(NEW, NEW_SAVING, SUBMITTED, ACCEPTED, RUNNING);
+      EnumSet.of(NEW, NEW_SAVING, SUBMITTED, ACCEPTED, RUNNING);
   private static final EnumSet<YarnApplicationState> YARN_FINISHED_APPLICATION_STATES =
-    EnumSet.of(FAILED, KILLED, FINISHED);
+      EnumSet.of(FAILED, KILLED, FINISHED);
   private static final Set<String> APPLICATION_TYPES = Collections.singleton("SPARK");
   private final YarnClient yarnClient;
 
@@ -79,18 +75,18 @@ public class YarnClientService implements Closeable {
   }
 
   public Map<String, ApplicationId> getRunningApplicationIdByName(
-    @NotNull Set<String> applicationNames) {
+      @NotNull Set<String> applicationNames) {
     try {
       return yarnClient.getApplications(APPLICATION_TYPES, YARN_RUNNING_APPLICATION_STATES).stream()
-        .filter(ar -> applicationNames.contains(ar.getName()))
-        .collect(
-          Collectors.toMap(
-            ApplicationReport::getName, ApplicationReport::getApplicationId, (a, b) -> b));
+          .filter(ar -> applicationNames.contains(ar.getName()))
+          .collect(
+              Collectors.toMap(
+                  ApplicationReport::getName, ApplicationReport::getApplicationId, (a, b) -> b));
     } catch (YarnException | IOException ex) {
       log.error(
-        "Exception during the getting applicationIds for applicationNames {}",
-        String.join(",", applicationNames),
-        ex);
+          "Exception during the getting applicationIds for applicationNames {}",
+          String.join(",", applicationNames),
+          ex);
     }
     return Collections.emptyMap();
   }
@@ -98,17 +94,17 @@ public class YarnClientService implements Closeable {
   public Map<String, Application> getAllApplicationByNames(@NotNull Set<String> applicationNames) {
     try {
       return yarnClient.getApplications(APPLICATION_TYPES).stream()
-        .filter(ar -> applicationNames.contains(ar.getName()))
-        .collect(
-          Collectors.toMap(
-            ApplicationReport::getName,
-            ar -> new Application(ar.getApplicationId(), ar.getYarnApplicationState()),
-            (a, b) -> b));
+          .filter(ar -> applicationNames.contains(ar.getName()))
+          .collect(
+              Collectors.toMap(
+                  ApplicationReport::getName,
+                  ar -> new Application(ar.getApplicationId(), ar.getYarnApplicationState()),
+                  (a, b) -> b));
     } catch (YarnException | IOException ex) {
       log.error(
-        "Exception during the getting applicationIds for applicationNames {}",
-        String.join(",", applicationNames),
-        ex);
+          "Exception during the getting applicationIds for applicationNames {}",
+          String.join(",", applicationNames),
+          ex);
     }
     return Collections.emptyMap();
   }
@@ -116,14 +112,14 @@ public class YarnClientService implements Closeable {
   public Optional<String> getFinishedApplicationNameById(@NotNull String applicationId) {
     try {
       return yarnClient
-        .getApplications(APPLICATION_TYPES, YARN_FINISHED_APPLICATION_STATES)
-        .stream()
-        .filter(ar -> ar.getApplicationId().toString().equals(applicationId))
-        .findFirst()
-        .map(ApplicationReport::getName);
+          .getApplications(APPLICATION_TYPES, YARN_FINISHED_APPLICATION_STATES)
+          .stream()
+          .filter(ar -> ar.getApplicationId().toString().equals(applicationId))
+          .findFirst()
+          .map(ApplicationReport::getName);
     } catch (YarnException | IOException ex) {
       log.error(
-        "Exception during the getting applicationName for applicationId {}", applicationId, ex);
+          "Exception during the getting applicationName for applicationId {}", applicationId, ex);
     }
     return Optional.empty();
   }

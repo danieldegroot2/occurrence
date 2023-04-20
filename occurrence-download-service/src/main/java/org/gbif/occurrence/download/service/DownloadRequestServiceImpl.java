@@ -17,10 +17,12 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.occurrence.DownloadRequestService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
 import org.gbif.occurrence.common.download.DownloadUtils;
-import org.gbif.occurrence.download.service.workflow.DownloadWorkflowParametersBuilder;
 import org.gbif.occurrence.mail.BaseEmailModel;
 import org.gbif.occurrence.mail.EmailSender;
 import org.gbif.occurrence.mail.OccurrenceEmailManager;
@@ -33,13 +35,11 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -102,31 +102,33 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
   private final String wsUrl;
   private final File downloadMount;
   private final OccurrenceDownloadService occurrenceDownloadService;
-  private final DownloadWorkflowParametersBuilder parametersBuilder;
   private final OccurrenceEmailManager emailManager;
   private final EmailSender emailSender;
-
   private final DownloadLimitsService downloadLimitsService;
+  private final DownloadLauncherService downloadService;
+  private final MessagePublisher messagePublisher;
 
   @Autowired
   public DownloadRequestServiceImpl(
-      @Qualifier("oozie.default_properties") Map<String, String> defaultProperties,
       @Value("${occurrence.download.portal.url}") String portalUrl,
       @Value("${occurrence.download.ws.url}") String wsUrl,
       @Value("${occurrence.download.ws.mount}") String wsMountDir,
       OccurrenceDownloadService occurrenceDownloadService,
       DownloadLimitsService downloadLimitsService,
       OccurrenceEmailManager emailManager,
-      EmailSender emailSender) {
+      EmailSender emailSender,
+      DownloadLauncherService downloadService,
+      MessagePublisher messagePublisher) {
     this.downloadIdService = new DownloadIdService();
     this.portalUrl = portalUrl;
     this.wsUrl = wsUrl;
     this.downloadMount = new File(wsMountDir);
     this.occurrenceDownloadService = occurrenceDownloadService;
-    this.parametersBuilder = new DownloadWorkflowParametersBuilder(defaultProperties);
     this.downloadLimitsService = downloadLimitsService;
     this.emailManager = emailManager;
     this.emailSender = emailSender;
+    this.downloadService = downloadService;
+    this.messagePublisher = messagePublisher;
   }
 
   @Override
@@ -136,7 +138,9 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
       if (download != null) {
         if (RUNNING_STATUSES.contains(download.getStatus())) {
           updateDownloadStatus(download, Download.Status.CANCELLED);
-          //client.kill(DownloadUtils.downloadToWorkflowId(downloadKey));
+
+          downloadService.cancelJob(downloadKey);
+
           log.info("Download {} cancelled", downloadKey);
         }
       } else {
@@ -174,10 +178,12 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
             "A download limitation is exceeded:\n" + exceedSimultaneousLimit + "\n");
       }
 
-      String jobId = downloadIdService.generateId();
-      log.debug("Download job id is: [{}]", jobId);
-      String downloadId = DownloadUtils.workflowToDownloadId(jobId);
+      String downloadId = downloadIdService.generateId();
+      log.debug("Download job id is: [{}]", downloadId);
       persistDownload(request, downloadId, source);
+
+      messagePublisher.send(new DownloadLauncherMessage(downloadId));
+
       return downloadId;
     } catch (Exception e) {
       log.error("Failed to create download job", e);
@@ -238,15 +244,14 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
 
   /** Processes a callback from Oozie which update the download status. */
   @Override
-  public void processCallback(String jobId, String status) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(jobId), "<jobId> may not be null or empty");
+  public void processCallback(String downloadId, String status) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(downloadId), "<jobId> may not be null or empty");
     Preconditions.checkArgument(
         !Strings.isNullOrEmpty(status), "<status> may not be null or empty");
     Optional<JobStatus> opStatus = Enums.getIfPresent(JobStatus.class, status.toUpperCase());
     Preconditions.checkArgument(opStatus.isPresent(), "<status> the requested status is not valid");
-    String downloadId = DownloadUtils.workflowToDownloadId(jobId);
 
-    log.debug("Processing callback for jobId [{}] with status [{}]", jobId, status);
+    log.debug("Processing callback for jobId [{}] with status [{}]", downloadId, status);
 
     Download download = occurrenceDownloadService.get(downloadId);
     if (download == null) {
@@ -280,7 +285,7 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
 
       case FAILED:
         log.error(
-            NOTIFY_ADMIN, "Got callback for failed query. JobId [{}], Status [{}]", jobId, status);
+            NOTIFY_ADMIN, "Got callback for failed query. JobId [{}], Status [{}]", downloadId, status);
         updateDownloadStatus(download, newStatus);
         emailModel = emailManager.generateFailedDownloadEmailModel(download, portalUrl);
         emailSender.send(emailModel);

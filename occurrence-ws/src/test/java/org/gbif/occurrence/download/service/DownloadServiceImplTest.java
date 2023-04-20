@@ -26,9 +26,11 @@ import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.predicate.Predicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.occurrence.DownloadRequestService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.occurrence.mail.EmailSender;
 import org.gbif.occurrence.mail.OccurrenceEmailManager;
 
@@ -73,23 +75,26 @@ public class DownloadServiceImplTest {
   @Mock
   private OozieClient oozieClient;
 
-  private final Map<String, String> props = Maps.newHashMap();
-
   private DownloadRequestService requestService;
 
   private OccurrenceDownloadService downloadService;
-
-  private DownloadLimitsService downloadLimitsService;
 
   private static final Predicate DEFAULT_TEST_PREDICATE = new EqualsPredicate(PARAM, "bar", false);
 
   @BeforeEach
   public void setup() {
-    props.clear();
-    downloadService = mock(OccurrenceDownloadService.class);
-    downloadLimitsService = mock(DownloadLimitsService.class);
     requestService =
-      new DownloadRequestServiceImpl(props, "", "", "", downloadService, downloadLimitsService, mock(OccurrenceEmailManager.class), mock(EmailSender.class));
+      new DownloadRequestServiceImpl(
+        "",
+        "",
+        "",
+        mock(OccurrenceDownloadService.class),
+        mock(DownloadLimitsService.class),
+        mock(OccurrenceEmailManager.class),
+        mock(EmailSender.class),
+        mock(DownloadLauncherService.class),
+        mock(MessagePublisher.class)
+      );
   }
 
 

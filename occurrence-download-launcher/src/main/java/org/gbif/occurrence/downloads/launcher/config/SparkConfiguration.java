@@ -14,29 +14,21 @@
 package org.gbif.occurrence.downloads.launcher.config;
 
 import java.util.Set;
-
 import javax.validation.constraints.NotNull;
-
 import lombok.Data;
 
 @Data
 public class SparkConfiguration {
 
-  @NotNull
-  private String appResource;
+  @NotNull private String appResource;
 
-  @NotNull
-  private String mainClass;
+  @NotNull private String mainClass;
 
-  @NotNull
-  private String deployMode;
+  @NotNull private String deployMode;
 
-  @NotNull
-  private String master;
+  @NotNull private String master;
 
-  @NotNull
-  private Set<String> files;
+  @NotNull private Set<String> files;
 
-  @NotNull
-  private boolean verbose;
+  @NotNull private boolean verbose;
 }

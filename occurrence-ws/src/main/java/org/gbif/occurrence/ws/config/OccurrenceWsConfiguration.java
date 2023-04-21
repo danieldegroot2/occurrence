@@ -17,7 +17,7 @@ import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.common.messaging.ConnectionParameters;
-import org.gbif.common.messaging.DefaultMessagePublisher;
+import org.gbif.common.messaging.JsonMessagePublisher;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.occurrence.common.download.DownloadUtils;
 import org.gbif.occurrence.download.service.workflow.DownloadWorkflowParameters;
@@ -107,13 +107,13 @@ public class OccurrenceWsConfiguration {
 
   @Bean
   public MessagePublisher messagePublisher(RabbitProperties rabbitProperties) throws IOException {
-    return new DefaultMessagePublisher(
-      new ConnectionParameters(
-        rabbitProperties.getHost(),
-        rabbitProperties.getPort(),
-        rabbitProperties.getUsername(),
-        rabbitProperties.getPassword(),
-        rabbitProperties.getVirtualHost()));
+    return new JsonMessagePublisher(
+        new ConnectionParameters(
+            rabbitProperties.getHost(),
+            rabbitProperties.getPort(),
+            rabbitProperties.getUsername(),
+            rabbitProperties.getPassword(),
+            rabbitProperties.getVirtualHost()));
   }
 
   @Configuration

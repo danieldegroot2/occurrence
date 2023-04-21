@@ -13,6 +13,7 @@
  */
 package org.gbif.occurrence.downloads.launcher;
 
+import org.gbif.common.messaging.api.messages.DownloadLauncherMessage;
 import org.gbif.occurrence.downloads.launcher.config.DownloadServiceConfiguration;
 import org.gbif.occurrence.downloads.launcher.config.RegistryConfiguration;
 import org.gbif.occurrence.downloads.launcher.config.SparkConfiguration;
@@ -20,17 +21,21 @@ import org.gbif.occurrence.downloads.launcher.services.JobManager;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 // TODO: RESTRUCTURE THE CLASS
@@ -68,21 +73,29 @@ public class OccurrenceDownloadsLauncherApplication {
   }
 
   @Bean
+  @Primary
   Queue downloadsQueue(DownloadServiceConfiguration configuration) {
     return QueueBuilder.durable(configuration.getQueueName())
-        .withArgument("x-dead-letter-exchange", "")
-        .withArgument("x-dead-letter-routing-key", configuration.getDeadQueueName())
+        .deadLetterExchange("")
+        .deadLetterRoutingKey(configuration.getDeadQueueName())
         .build();
   }
 
   @Bean
-  public Jackson2JsonMessageConverter messageConverter() {
-    return new Jackson2JsonMessageConverter();
+  public Binding binding(Queue queue) {
+    return BindingBuilder.bind(queue)
+        .to(new DirectExchange("occurrence"))
+        .with(DownloadLauncherMessage.ROUTING_KEY);
+  }
+
+  @Bean
+  public SimpleMessageConverter messageConverter() {
+    return new SimpleMessageConverter();
   }
 
   @Bean
   public RabbitTemplate rabbitTemplate(
-      ConnectionFactory connectionFactory, Jackson2JsonMessageConverter converter) {
+      ConnectionFactory connectionFactory, SimpleMessageConverter converter) {
     RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
     rabbitTemplate.setMessageConverter(converter);
     return rabbitTemplate;

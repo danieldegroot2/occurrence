@@ -182,6 +182,7 @@ public class DownloadRequestServiceImpl implements DownloadRequestService, Callb
       log.debug("Download job id is: [{}]", downloadId);
       persistDownload(request, downloadId, source);
 
+      log.debug("Send message to the download launcher queue");
       messagePublisher.send(new DownloadLauncherMessage(downloadId));
 
       return downloadId;

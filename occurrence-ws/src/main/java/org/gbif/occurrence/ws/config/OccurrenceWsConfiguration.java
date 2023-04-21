@@ -16,7 +16,10 @@ package org.gbif.occurrence.ws.config;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.service.occurrence.DownloadLauncherService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
-import org.gbif.common.messaging.ConnectionParameters;import org.gbif.common.messaging.DefaultMessagePublisher;import org.gbif.common.messaging.DefaultMessageRegistry;import org.gbif.common.messaging.api.MessagePublisher;import org.gbif.occurrence.common.download.DownloadUtils;
+import org.gbif.common.messaging.ConnectionParameters;
+import org.gbif.common.messaging.DefaultMessagePublisher;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.occurrence.common.download.DownloadUtils;
 import org.gbif.occurrence.download.service.workflow.DownloadWorkflowParameters;
 import org.gbif.occurrence.persistence.configuration.OccurrencePersistenceConfiguration;
 import org.gbif.occurrence.query.TitleLookupService;
@@ -29,15 +32,17 @@ import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
-import java.io.IOException;import java.util.Map;
+import java.io.IOException;
+import java.util.Map;
 
 import org.apache.oozie.client.OozieClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.amqp.RabbitProperties;import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap;
 
 @Configuration
 public class OccurrenceWsConfiguration {

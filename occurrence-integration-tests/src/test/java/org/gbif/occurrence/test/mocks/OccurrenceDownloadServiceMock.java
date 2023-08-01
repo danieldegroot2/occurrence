@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -108,7 +109,7 @@ public class OccurrenceDownloadServiceMock implements OccurrenceDownloadService 
       @NotNull String user,
       @Nullable Pageable pageable,
       @Nullable Set<Download.Status> statuses,
-      @Nullable Date from,
+      @Nullable LocalDateTime from,
       @Nullable Boolean statistics) {
     return filterDownloads(
         pageable,
@@ -117,7 +118,7 @@ public class OccurrenceDownloadServiceMock implements OccurrenceDownloadService 
 
   @Override
   public long countByUser(
-      @NotNull String s, @org.jetbrains.annotations.Nullable Set<Download.Status> set, Date date) {
+      @NotNull String s, @org.jetbrains.annotations.Nullable Set<Download.Status> set, LocalDateTime date) {
     return 0;
   }
 

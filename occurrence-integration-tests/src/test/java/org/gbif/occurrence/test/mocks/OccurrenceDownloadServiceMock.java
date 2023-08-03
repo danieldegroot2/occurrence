@@ -99,8 +99,8 @@ public class OccurrenceDownloadServiceMock implements OccurrenceDownloadService 
 
   @Override
   public long count(
-      @org.jetbrains.annotations.Nullable Set<Download.Status> set,
-      @org.jetbrains.annotations.Nullable String s) {
+      @Nullable Set<Download.Status> set,
+      @Nullable String s) {
     return 0;
   }
 
@@ -118,7 +118,7 @@ public class OccurrenceDownloadServiceMock implements OccurrenceDownloadService 
 
   @Override
   public long countByUser(
-      @NotNull String s, @org.jetbrains.annotations.Nullable Set<Download.Status> set, LocalDateTime date) {
+      @NotNull String s, @Nullable Set<Download.Status> set, LocalDateTime date) {
     return 0;
   }
 
@@ -144,29 +144,29 @@ public class OccurrenceDownloadServiceMock implements OccurrenceDownloadService 
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
       @NotNull String s,
-      @org.jetbrains.annotations.Nullable String s1,
-      @org.jetbrains.annotations.Nullable DatasetUsageSortField datasetUsageSortField,
-      @org.jetbrains.annotations.Nullable SortOrder sortOrder,
-      @org.jetbrains.annotations.Nullable Pageable pageable) {
+      @Nullable String s1,
+      @Nullable DatasetUsageSortField datasetUsageSortField,
+      @Nullable SortOrder sortOrder,
+      @Nullable Pageable pageable) {
     return null;
   }
 
   @Override
   public PagingResponse<OrganizationOccurrenceDownloadUsage> listOrganizationUsages(
       @NotNull String s,
-      @org.jetbrains.annotations.Nullable String s1,
-      @org.jetbrains.annotations.Nullable OrganizationUsageSortField organizationUsageSortField,
-      @org.jetbrains.annotations.Nullable SortOrder sortOrder,
-      @org.jetbrains.annotations.Nullable Pageable pageable) {
+      @Nullable String s1,
+      @Nullable OrganizationUsageSortField organizationUsageSortField,
+      @Nullable SortOrder sortOrder,
+      @Nullable Pageable pageable) {
     return null;
   }
 
   @Override
   public PagingResponse<CountryOccurrenceDownloadUsage> listCountryUsages(
       @NotNull String s,
-      @org.jetbrains.annotations.Nullable CountryUsageSortField countryUsageSortField,
-      @org.jetbrains.annotations.Nullable SortOrder sortOrder,
-      @org.jetbrains.annotations.Nullable Pageable pageable) {
+      @Nullable CountryUsageSortField countryUsageSortField,
+      @Nullable SortOrder sortOrder,
+      @Nullable Pageable pageable) {
     return null;
   }
 
